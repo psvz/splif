@@ -19,7 +19,6 @@ used as a jump-server.
 
 ARCHITECTURE
 ------------
-
 Private splif daemon (e.g. ./splif 45.45.45.45:3333 127.0.0.1:22) will keep a signalling
 TCP connection actively opened to the corresponding public splif daemon at 45.45.45.45
 port 3333. When a signal is received, the private splif daemon actively opens another
