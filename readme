@@ -1,0 +1,68 @@
+Special Port LIft and Forwarder (SPLIF)
+---------------------------------------
+Provides a jump-host access to private networks. Originally written for SSH the tool
+contains 2 modules in 1 executable file. Which one it turns is defined by the syntax:
+
+Usage in private VM: ./splif <Splif host:port> <Private host:port>
+Usage in public  VM: ./splif <Splif port> <Public port>
+
+Private VM
+----------
+Any host inside a private network that can access Internet via NAT, meaning that the host
+can establish a TCP connection to a public host, whereas the private host is inaccessible
+from Internet (public cloud).
+
+Public VM
+---------
+Any public host under the user's control that has 2 spare TCP ports. The host will be
+used as a jump-server.
+
+ARCHITECTURE
+------------
+
+Private splif daemon (e.g. ./splif 45.45.45.45:3333 127.0.0.1:22) will keep a signalling
+TCP connection actively opened to the corresponding public splif daemon at 45.45.45.45
+port 3333. When a signal is received, the private splif daemon actively opens another
+2 TCP links - to 45.45.45.45:3333 and to 127.0.0.1:22 - and splices data between them.
+
+Public splif daemon (e.g. ./splif 3333 1887) accepts one signalling and many service
+connections on port 3333 from the private splif daemon. The number of the service
+connections will, of course, coincide with the number of client connections accepted
+on port 1887. Data between corresponding client and splif connections are spliced.
+
+In the example above a user connecting from the cloud to 45.45.45.45:1887 will be
+perceived by sshd running at the private host as one connecting from localhost:
+<ephemeral port>. Many users can be connected to the entry point (45.45.45.45:1887),
+but the daemons must work back-to-back, that is, if two hosts in question are the same,
+then 1887-3333-22 are reserved for two daemons - if another port is sought, then another
+pair of daemons should be started with all different ports.
+
+Header file (splif.h) contains a few definitions controlling low-level behaviour. Notably,
+SIGNATUR represents a shared secret making the daemons a pair. It is advised that each
+such pair has a unique string defined.
+
+The daemons log errors with default application facility. Unless you fiddled with
+rsyslog.conf, the messages could be found in /var/log/syslog.
+
+Splif arguments are DNS/hosts/services resolvable and IPv4 and 6 conformant. Bear in
+mind, however, that a resolving error will preclude the daemon from starting.
+
+LIMITATIONS
+-----------
+I use epoll API, so the code can only be compiled and executed on Linux. Since high
+performance throughput was never a target, splicing connections is done by copying data
+between kernel space and user land, as opposed to splice().
+
+EXAMPLARY USE
+-------------
+Extending the example above, PuTTY connecting to the jump host 45.45.45.45:1887 can
+have dynamic port forwarding (Session->Connection->SSH->Tunnels), where only source
+port is required (e.g. D5000). Having this configuration in place and the session
+established allows your browser to use SOCKS proxy to localhost:5000. The final check
+is that the browser using proxied DNS service. In Firefox, go to about:config page
+and make sure that network.proxy.socks_remote_dns option is true. Subject to routes
+set up at your private host, you may now be able to browse entire Intranet.
+
+(C) 2016, Vitaly Zuevsky
+License: BSD 2-Clause
+
