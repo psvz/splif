@@ -94,6 +94,8 @@ struct	timespec	tp;
 				conres(fda);
 				goto armed;
 			}
+			if (setsockopt(fdb, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof on) < 0)
+                                syslog(LOG_ERR, "keepalive on pri-to-pub: %m");
 
 			ev.data.u64 = fda;
 			ev.data.u64 <<= 32;
