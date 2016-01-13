@@ -23,8 +23,8 @@ const	int	len = BUFPAGES * getpagesize();
 			fdr = evi[i].data.u64 & 0xFFFFFFFF;
 			fdw = evi[i].data.u64 >> 32;
 			if ( (n = recv(fdr, buffer, len, 0)) <= 0) {
-				conres(fdr);
-				conres(fdw);
+				close(fdr);
+				close(fdw);
 			} else {
 				k = 0;
 				while (k < n) if ( (m = send(fdw, buffer + k, n - k, 0)) < 0) {
