@@ -144,6 +144,8 @@ struct	timespec	tp;
 			}
 			if (setsockopt(fda, IPPROTO_TCP, TCP_NODELAY, &on, sizeof on) < 0)
                         	syslog(LOG_ERR, "pubaccept - can't disable Nagle: %m");
+			if (setsockopt(fda, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof on) < 0)
+                                syslog(LOG_ERR, "keepalive on usr-to-pub: %m");
 
 			pthread_mutex_lock(&pmut);
 			cbuf = fda;
